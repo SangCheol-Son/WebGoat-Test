@@ -24,7 +24,7 @@ pipeline {
 				script {
                 	// Maven Build Tool에 실행 권한을 부여한다.
 					sh "chmod u+x ./mvnw"
-                    sh "./mvnw clean package
+                    sh "./mvnw clean package"
 				}
 			}
 		}
