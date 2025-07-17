@@ -7,7 +7,7 @@ pipeline {
     }
     
     environment {
-        // 프로젝트 정보만 설정 (SonarQube는 Jenkins 시스템 설정 사용)
+        // 프로젝트 정보만 설정
         PROJECT_KEY = "${params.GIT_REPONAME}"
         PROJECT_NAME = "${params.GIT_REPONAME}"
         // WebGoat-Test 저장소 URL
@@ -34,7 +34,7 @@ pipeline {
                         submoduleCfg: [],
                         userRemoteConfigs: [[
                             url: GIT_REPO_URL,
-                            credentialsId: 'github-credentials'  // GitHub 자격증명 ID
+                            credentialsId: 'jenkins_ssh_access_key_new'  // 기존 자격증명 사용
                         ]]
                     ])
                     
@@ -95,8 +95,8 @@ pipeline {
                     echo "Project Key: ${PROJECT_KEY}"
                     echo "Current directory: ${WORKSPACE}"
                     
-                    // SonarQube 분석 실행 (Jenkins 시스템 설정 사용)
-                    withSonarQubeEnv('SonarQube') {
+                    // Jenkins 시스템 설정의 SAST-SonarQube 사용
+                    withSonarQubeEnv('SAST-SonarQube') {
                         sh """
                             # 디버깅: 현재 디렉토리와 파일 확인
                             echo "=== SonarQube 분석 시작 ==="
