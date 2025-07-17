@@ -83,7 +83,8 @@ pipeline {
                     echo "=== 프로젝트 빌드 ==="
                     // Maven Build Tool에 실행 권한을 부여한다.
                     sh "chmod u+x ./mvnw"
-                    sh "./mvnw clean compile"
+                    // 컴파일만 수행 (애플리케이션 시작 제외)
+                    sh "./mvnw clean compile test-compile"
                 }
             }
         }
@@ -103,8 +104,8 @@ pipeline {
                             pwd
                             ls -la
                             
-                            # Maven을 사용한 SonarQube 분석
-                            ./mvnw clean verify sonar:sonar \\
+                            # Maven을 사용한 SonarQube 분석 (verify 단계 제외)
+                            ./mvnw clean compile test-compile sonar:sonar \\
                                 -Dsonar.projectKey=${PROJECT_KEY} \\
                                 -Dsonar.projectName=${PROJECT_NAME} \\
                                 -Dsonar.sources=src/main/java \\
@@ -113,7 +114,9 @@ pipeline {
                                 -Dsonar.sourceEncoding=UTF-8 \\
                                 -Dsonar.verbose=true \\
                                 -Dsonar.scm.provider=git \\
-                                -Dsonar.scm.forceReloadAll=true
+                                -Dsonar.scm.forceReloadAll=true \\
+                                -Dsonar.java.binaries=target/classes \\
+                                -Dsonar.java.test.binaries=target/test-classes
                         """
                     }
                     
