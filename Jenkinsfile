@@ -132,17 +132,20 @@ pipeline {
                     echo "=== Trivy 이미지 스캔 시작 ==="
                     echo "Project: ${PROJECT_KEY}"
                     
+                    // Docker 이미지 이름을 소문자로 변환
+                    def imageName = "${PROJECT_KEY}".toLowerCase()
+                    
                     // Dockerfile 확인
                     if (fileExists('Dockerfile')) {
                         echo "Dockerfile이 발견되었습니다."
                         
-                        // Docker 이미지 빌드
-                        sh "docker build -t ${PROJECT_KEY}:latest ."
+                        // Docker 이미지 빌드 (소문자로)
+                        sh "docker build -t ${imageName}:latest ."
                         
                         // Trivy로 이미지 스캔
                         sh """
                             echo "=== Trivy 스캔 실행 ==="
-                            trivy image --severity HIGH,CRITICAL ${PROJECT_KEY}:latest
+                            trivy image --severity HIGH,CRITICAL ${imageName}:latest
                             echo "=== Trivy 스캔 완료 ==="
                         """
                     } else {
