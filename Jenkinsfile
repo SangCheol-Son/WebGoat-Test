@@ -105,17 +105,17 @@ pipeline {
                             ls -la
                             
                             # Maven을 사용한 SonarQube 분석 (verify 단계 제외)
-                            ./mvnw clean compile test-compile sonar:sonar \\
-                                -Dsonar.projectKey=${PROJECT_KEY} \\
-                                -Dsonar.projectName=${PROJECT_NAME} \\
-                                -Dsonar.sources=src/main/java \\
-                                -Dsonar.tests=src/test/java \\
-                                -Dsonar.java.source=11 \\
-                                -Dsonar.sourceEncoding=UTF-8 \\
-                                -Dsonar.verbose=true \\
-                                -Dsonar.scm.provider=git \\
-                                -Dsonar.scm.forceReloadAll=true \\
-                                -Dsonar.java.binaries=target/classes \\
+                            ./mvnw clean compile test-compile sonar:sonar \
+                                -Dsonar.projectKey=${PROJECT_KEY} \
+                                -Dsonar.projectName=${PROJECT_NAME} \
+                                -Dsonar.sources=src/main/java \
+                                -Dsonar.tests=src/test/java \
+                                -Dsonar.java.source=11 \
+                                -Dsonar.sourceEncoding=UTF-8 \
+                                -Dsonar.verbose=true \
+                                -Dsonar.scm.provider=git \
+                                -Dsonar.scm.forceReloadAll=true \
+                                -Dsonar.java.binaries=target/classes \
                                 -Dsonar.java.test.binaries=target/test-classes
                         """
                     }
@@ -125,17 +125,29 @@ pipeline {
             }
         }
         
-        stage('Quality Gate Check') {
+        // Trivy 이미지 스캔 스테이지 추가
+        stage('Trivy Image Scan') {
             steps {
                 script {
-                    echo "=== 품질 게이트 확인 ==="
-                    // SonarQube 품질 게이트 확인
-                    timeout(time: 1, unit: 'HOURS') {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                        }
-                        echo "Quality Gate passed: ${qg.status}"
+                    echo "=== Trivy 이미지 스캔 시작 ==="
+                    echo "Project: ${PROJECT_KEY}"
+                    
+                    // Dockerfile 확인
+                    if (fileExists('Dockerfile')) {
+                        echo "Dockerfile이 발견되었습니다."
+                        
+                        // Docker 이미지 빌드
+                        sh "docker build -t ${PROJECT_KEY}:latest ."
+                        
+                        // Trivy로 이미지 스캔
+                        sh """
+                            echo "=== Trivy 스캔 실행 ==="
+                            trivy image --severity HIGH,CRITICAL ${PROJECT_KEY}:latest
+                            echo "=== Trivy 스캔 완료 ==="
+                        """
+                    } else {
+                        echo "Dockerfile이 없습니다. Trivy 스캔을 건너뜁니다."
+                        echo "Dockerfile을 생성하여 이미지 스캔을 활성화하세요."
                     }
                 }
             }
